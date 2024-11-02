@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Queen Spriky MD Session Generator</title>
+  <title>Session Generator</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
-    /* CSS Reset */
     * {
       margin: 0;
       padding: 0;
@@ -31,6 +31,7 @@
       width: 90%;
       max-width: 420px;
       transition: all 0.3s ease;
+      position: relative;
     }
 
     .container:hover {
@@ -38,11 +39,11 @@
     }
 
     .bot-logo {
-      width: 150px; /* Increased size */
-      height: 150px; /* Increased size */
+      width: 150px;
+      height: 150px;
       border-radius: 50%;
       overflow: hidden;
-      margin: 0 auto 20px; /* Center logo */
+      margin: 0 auto 20px;
       transition: transform 0.3s ease;
     }
 
@@ -51,10 +52,6 @@
       height: 100%;
       object-fit: cover;
       display: block;
-    }
-
-    .container:hover .bot-logo {
-      transform: rotate(360deg);
     }
 
     .typing-effect {
@@ -138,6 +135,21 @@
     .copy-button:active, .generate-button:active {
       transform: scale(0.98);
     }
+
+    #loading-spinner {
+      display: none;
+      color: white;
+      margin-top: 10px;
+    }
+
+    .fa-spinner {
+      animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -150,17 +162,21 @@
     <p id="sessionGenerate">Session Generate</p>
 
     <div class="input-field">
-      <input type="text" id="mobileNumber" placeholder="Enter your mobile number">
+      <input type="text" id="mobileNumber" placeholder="Enter your mobile number with country code">
     </div>
 
-    <button class="generate-button" onclick="generatePairCode()">Generate Pair Code</button>
+    <button class="generate-button" id="submit">Generate Pair Code</button>
 
-    <div class="code-display" id="codeDisplay">display pair code here</div>
-    <button class="copy-button" onclick="copyCode()">Copy Pair Code</button>
+    <div id="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+
+    <div class="code-display" id="codeDisplay">Display pair code here</div>
+    <button class="copy-button" id="copy" onclick="copyCode()">Copy Pair Code</button>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
   <script>
-    // Trigger typing effect for 'Session Generate' after 'Queen Spriky MD' completes
     function startTypingSessionGenerate() {
       const sessionGenerate = document.getElementById("sessionGenerate");
       sessionGenerate.style.visibility = "visible";
@@ -168,27 +184,44 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-      setTimeout(startTypingSessionGenerate, 2000); // Start after Queen Spriky MD finishes
+      setTimeout(startTypingSessionGenerate, 2000);
     });
 
-    // Generate a dummy pair code and display it
-    function generatePairCode() {
-      const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-      document.getElementById("codeDisplay").innerText = code;
-    }
+    document.getElementById("submit").addEventListener("click", async (e) => {
+      e.preventDefault();
+      const mobileNumberInput = document.getElementById("mobileNumber");
+      const codeDisplay = document.getElementById("codeDisplay");
+      const loadingSpinner = document.getElementById("loading-spinner");
 
-    // Copy the displayed pair code
+      const mobileNumber = mobileNumberInput.value.trim();
+      if (!mobileNumber) {
+        codeDisplay.innerText = '❗ Enter your WhatsApp number with country code.';
+        return;
+      }
+
+      loadingSpinner.style.display = "block";
+      codeDisplay.innerText = '';
+
+      try {
+        const response = await axios(`/code?number=${mobileNumber.replace(/[^0-9]/g, "")}`);
+        const code = response.data.code || "❗ Service Unavailable";
+        codeDisplay.innerHTML = `CODE: <span style="color:red;font-weight:bold">${code}</span>`;
+      } catch (error) {
+        console.error("Error generating code:", error);
+        codeDisplay.innerText = '❗ Error generating code.';
+      } finally {
+        loadingSpinner.style.display = "none";
+      }
+    });
+
     function copyCode() {
       const codeDisplay = document.getElementById("codeDisplay").innerText;
-      navigator.clipboard.writeText(codeDisplay).then(() => {
+      navigator.clipboard.writeText(codeDisplay.replace('CODE: ', '')).then(() => {
         alert("Pair Code copied to clipboard!");
       }).catch(err => {
         console.error("Failed to copy text: ", err);
       });
     }
-
-    // Automatically generate a pair code on load
-    generatePairCode();
   </script>
 
 </body>
