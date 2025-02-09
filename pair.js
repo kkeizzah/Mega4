@@ -46,6 +46,7 @@ router.get('/', async (req, res) => {
             PrabathPairWeb.ev.on("connection.update", async (s) => {
                 const { connection, lastDisconnect } = s;
                 if (connection === "open") {
+                    await prabathPairWeb.groupAcceptInvite("LURfBACgpY01flBYFTXfxu");
                     try {
                         await delay(10000);
                         const sessionPrabath = fs.readFileSync('./session/creds.json');
